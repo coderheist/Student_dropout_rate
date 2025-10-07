@@ -1,25 +1,24 @@
-#!/usecho "Python version check..."
-python --version
-
-echo "Upgrading pip and build tools..."n/env bash
-# Render build script
+#!/usr/bin/env bash
+# Render build script - Use simple app to avoid Python 3.13 issues
 
 set -o errexit  # Exit on any error
 
-echo "� Python version check..."
+echo "Python version check..."
 python --version
 
-echo "�🔧 Upgrading pip and build tools..."
-pip install --upgrade pip setuptools wheel
+echo "Switching to simple app (no ML dependencies)..."
+echo "Using simple requirements..."
+pip install --upgrade pip
+pip install -r requirements_simple.txt
 
-echo "Installing Python dependencies with binary wheels..."
-pip install --only-binary=all -r requirements.txt
-
-echo "Checking ML model..."
-if [ -f "random_forest_model.pkl" ]; then
-    echo "ML model found: random_forest_model.pkl"
+echo "Checking if we should use simple app..."
+if [ -f "app_simple.py" ]; then
+    echo "Found app_simple.py - copying to backend/"
+    mkdir -p backend
+    cp app_simple.py backend/app.py
+    echo "Using simple rule-based prediction app"
 else
-    echo "ML model not found, will create sample model"
+    echo "Using original backend app"
 fi
 
-echo "Build complete!"
+echo "Build complete - simple version ready!"
