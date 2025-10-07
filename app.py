@@ -1,21 +1,27 @@
 """
 Direct Simple App for Render - No subdirectories
 """
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 CORS(app)
 
 @app.route('/')
 def home():
+    # Serve the HTML interface
+    return send_from_directory('static', 'index.html')
+
+@app.route('/api')
+def api_info():
+    # API information endpoint
     return jsonify({
         'message': 'Student Dropout Prediction API (Simple Version)',
         'status': 'active',
         'version': '2.0 - Direct Deploy',
         'model': 'Rule-based prediction system',
-        'endpoints': ['/predict', '/health']
+        'endpoints': ['/predict', '/health', '/api']
     })
 
 @app.route('/health')
