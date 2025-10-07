@@ -1,11 +1,11 @@
-{
-  "services": [
-    {
-      "type": "web",
-      "name": "student-dropout-prediction",
-      "env": "python",
-      "buildCommand": "chmod +x build.sh && ./build.sh",
-      "startCommand": "chmod +x start.sh && ./start.sh"
-    }
-  ]
-}
+services:
+  - type: web
+    name: student-dropout-prediction
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install Flask==2.3.3 Flask-CORS==4.0.0 gunicorn==20.1.0"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.16
