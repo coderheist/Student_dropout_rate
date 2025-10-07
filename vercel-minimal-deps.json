@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/minimal.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/minimal.py"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    }
+  ]
+}

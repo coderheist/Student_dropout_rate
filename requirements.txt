@@ -1,3 +1,4 @@
-Flask==2.3.2
-Flask-CORS==4.0.0
-numpy==1.24.3
+# Minimal dependencies for Vercel deployment
+# Commented out to avoid pip install issues on serverless
+# Flask==2.3.2  
+# Flask-CORS==4.0.0
