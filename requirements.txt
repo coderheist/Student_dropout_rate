@@ -1,6 +1,2 @@
-# For Railway deployment with ML model
-Flask==2.3.2
-Flask-CORS==4.0.0
-numpy==1.24.3
-scikit-learn==1.3.0
-pandas==2.0.3
+# Empty for Vercel - uses zero-dependency serverless function
+# For Railway deployment, see requirements-railway.txt
