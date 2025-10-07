@@ -3,8 +3,10 @@
 
 set -o errexit  # Exit on any error
 
+echo "🔧 Upgrading pip and setuptools..."
+pip install --upgrade pip setuptools wheel
+
 echo "🔧 Installing Python dependencies..."
-pip install --upgrade pip
 pip install -r requirements.txt
 
 echo "🤖 Checking ML model..."
