@@ -1,53 +1,36 @@
-"""
-Ultra-minimal Vercel serverless function for student dropout prediction
-Uses built-in Python only - no external dependencies
-"""
+from http.server import BaseHTTPRequestHandler
+import json
+import urllib.parse
 
-def handler(request):
-    """Minimal HTTP handler for Vercel"""
-    
-    # Handle CORS preflight
-    if request.method == 'OPTIONS':
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-            }
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        
+        response = {
+            "status": "API is running", 
+            "message": "Student Dropout Prediction API - Zero Dependencies"
         }
-    
-    # Health check
-    if request.method == 'GET':
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Content-Type': 'application/json'
-            },
-            'body': '{"status": "API is running", "message": "Student Dropout Prediction API"}'
-        }
-    
-    # Prediction endpoint
-    if request.method == 'POST':
+        self.wfile.write(json.dumps(response).encode())
+
+    def do_POST(self):
         try:
-            import json
-            
-            # Parse request body
-            if hasattr(request, 'body'):
-                data = json.loads(request.body)
-            elif hasattr(request, 'get_json'):
-                data = request.get_json()
-            else:
-                data = {}
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
             
             features = data.get('features', [])
             
             # Simple rule-based prediction
             if len(features) >= 23:
-                admission_grade = float(features[6]) if features[6] else 140
-                sem1_grade = float(features[14]) if features[14] else 12
-                sem2_grade = float(features[20]) if features[20] else 12
+                try:
+                    admission_grade = float(features[6]) if features[6] else 140
+                    sem1_grade = float(features[14]) if features[14] else 12
+                    sem2_grade = float(features[20]) if features[20] else 12
+                except (ValueError, IndexError):
+                    admission_grade, sem1_grade, sem2_grade = 140, 12, 12
                 
                 # Simple scoring system
                 score = 0
@@ -75,45 +58,34 @@ def handler(request):
             
             result = {
                 'prediction': prediction,
-                'probability': round(probability, 2),
+                'probability': round(min(max(probability, 0.1), 0.9), 2),
                 'message': 'Graduate' if prediction == 0 else 'At Risk of Dropout',
-                'note': 'Rule-based prediction system'
+                'note': 'Rule-based prediction (zero dependencies)'
             }
             
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Access-Control-Allow-Origin': '*',
-                    'Content-Type': 'application/json'
-                },
-                'body': json.dumps(result)
-            }
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode())
             
         except Exception as e:
-            return {
-                'statusCode': 500,
-                'headers': {
-                    'Access-Control-Allow-Origin': '*',
-                    'Content-Type': 'application/json'
-                },
-                'body': json.dumps({
-                    'error': f'Prediction failed: {str(e)}',
-                    'prediction': 1,
-                    'probability': 0.50
-                })
+            error_response = {
+                'error': f'Prediction failed: {str(e)}',
+                'prediction': 1,
+                'probability': 0.50,
+                'message': 'At Risk of Dropout'
             }
-    
-    # Method not allowed
-    return {
-        'statusCode': 405,
-        'headers': {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json'
-        },
-        'body': '{"error": "Method not allowed"}'
-    }
+            
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(error_response).encode())
 
-
-# Export the handler for Vercel
-def main(request):
-    return handler(request)
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
