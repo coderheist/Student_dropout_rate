@@ -1,26 +1,37 @@
-from http.server import BaseHTTPRequestHandler
 import json
-import urllib.parse
 
-class Handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        
-        response = {
+def handler(request, response):
+    """
+    Vercel serverless function for student dropout prediction
+    Zero dependencies - uses only Python built-ins
+    """
+    
+    # Set CORS headers
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Content-Type'] = 'application/json'
+    
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response.status_code = 200
+        return ''
+    
+    # Health check endpoint
+    if request.method == 'GET':
+        result = {
             "status": "API is running", 
-            "message": "Student Dropout Prediction API - Zero Dependencies"
+            "message": "Student Dropout Prediction API",
+            "version": "zero-dependencies"
         }
-        self.wfile.write(json.dumps(response).encode())
-
-    def do_POST(self):
+        response.status_code = 200
+        return json.dumps(result)
+    
+    # Prediction endpoint
+    if request.method == 'POST':
         try:
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            data = json.loads(post_data.decode('utf-8'))
-            
+            # Get request data
+            data = request.json if hasattr(request, 'json') and request.json else {}
             features = data.get('features', [])
             
             # Simple rule-based prediction
@@ -29,7 +40,7 @@ class Handler(BaseHTTPRequestHandler):
                     admission_grade = float(features[6]) if features[6] else 140
                     sem1_grade = float(features[14]) if features[14] else 12
                     sem2_grade = float(features[20]) if features[20] else 12
-                except (ValueError, IndexError):
+                except (ValueError, IndexError, TypeError):
                     admission_grade, sem1_grade, sem2_grade = 140, 12, 12
                 
                 # Simple scoring system
@@ -60,14 +71,11 @@ class Handler(BaseHTTPRequestHandler):
                 'prediction': prediction,
                 'probability': round(min(max(probability, 0.1), 0.9), 2),
                 'message': 'Graduate' if prediction == 0 else 'At Risk of Dropout',
-                'note': 'Rule-based prediction (zero dependencies)'
+                'note': 'Rule-based prediction system'
             }
             
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps(result).encode())
+            response.status_code = 200
+            return json.dumps(result)
             
         except Exception as e:
             error_response = {
@@ -77,15 +85,9 @@ class Handler(BaseHTTPRequestHandler):
                 'message': 'At Risk of Dropout'
             }
             
-            self.send_response(500)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps(error_response).encode())
-
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        self.end_headers()
+            response.status_code = 500
+            return json.dumps(error_response)
+    
+    # Method not allowed
+    response.status_code = 405
+    return json.dumps({'error': 'Method not allowed'})
