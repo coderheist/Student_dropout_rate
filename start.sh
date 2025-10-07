@@ -1,27 +1,10 @@
 #!/usr/bin/env bash
-# Render start script - Simple version
+# Simple start script for Render
 
-echo "Starting Student Dropout Prediction API (Simple Version)..."
-echo "PORT: $PORT"
+echo "Starting app on port $PORT"
 echo "Current directory: $(pwd)"
+echo "Files in directory:"
+ls -la
 
-# Check if backend directory exists
-if [ -d "backend" ]; then
-    echo "Found backend directory"
-    cd backend
-    echo "Changed to backend directory: $(pwd)"
-else
-    echo "Backend directory not found, staying in root"
-fi
-
-# Check if app.py exists
-if [ -f "app.py" ]; then
-    echo "Found app.py"
-    echo "App type: Simple rule-based prediction (no ML dependencies)"
-else
-    echo "app.py not found in $(pwd)"
-    ls -la
-fi
-
-echo "Starting gunicorn with simple Flask app..."
-exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 60 --log-level debug app:app
+echo "Starting with gunicorn..."
+exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 30 app:app
