@@ -1,7 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 import json
 
-class handler(BaseHTTPRequestHandler):
+class Handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -16,51 +16,60 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         
         response = {
-            "status": "working", 
-            "message": "Student Dropout API",
-            "timestamp": "2025-10-07"
+            "status": "API is working", 
+            "message": "Student Dropout Prediction API",
+            "version": "vercel-serverless"
         }
-        self.wfile.write(json.dumps(response).encode())
+        self.wfile.write(json.dumps(response).encode('utf-8'))
 
     def do_POST(self):
         try:
-            length = int(self.headers.get('Content-Length', 0))
-            if length:
-                data = json.loads(self.rfile.read(length).decode())
+            content_length = int(self.headers.get('Content-Length', 0))
+            if content_length > 0:
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
             else:
                 data = {}
             
             features = data.get('features', [])
             
-            # Basic prediction
-            prediction = 1
+            # Simple prediction logic
+            prediction = 1  # Default: at risk
             probability = 0.5
             
             if len(features) > 6:
-                grade = features[6] if features[6] else 140
                 try:
-                    if float(grade) > 150:
+                    admission_grade = float(features[6])
+                    if admission_grade > 150:
                         prediction = 0
                         probability = 0.8
-                except:
+                    else:
+                        prediction = 1  
+                        probability = 0.7
+                except (ValueError, IndexError):
                     pass
             
             result = {
                 'prediction': prediction,
                 'probability': probability,
-                'message': 'Graduate' if prediction == 0 else 'Dropout Risk'
+                'message': 'Graduate' if prediction == 0 else 'At Risk of Dropout'
             }
             
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            self.wfile.write(json.dumps(result).encode())
+            self.wfile.write(json.dumps(result).encode('utf-8'))
             
         except Exception as e:
+            error_response = {
+                'error': str(e),
+                'prediction': 1,
+                'probability': 0.5
+            }
+            
             self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Type', 'application/json')  
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
-            error = {'error': str(e), 'prediction': 1, 'probability': 0.5}
-            self.wfile.write(json.dumps(error).encode())
+            self.wfile.write(json.dumps(error_response).encode('utf-8'))
