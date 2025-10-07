@@ -1,1 +1,0 @@
-# Empty - Vercel uses zero-dependency serverless function
