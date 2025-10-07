@@ -1,3 +1,1 @@
-# Minimal dependencies for Vercel serverless deployment
-Flask==2.3.2
-Flask-CORS==4.0.0
+# Empty - Vercel uses zero-dependency serverless function
