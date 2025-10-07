@@ -3,11 +3,14 @@
 
 set -o errexit  # Exit on any error
 
-echo "🔧 Upgrading pip and setuptools..."
+echo "� Python version check..."
+python --version
+
+echo "�🔧 Upgrading pip and build tools..."
 pip install --upgrade pip setuptools wheel
 
-echo "🔧 Installing Python dependencies..."
-pip install -r requirements.txt
+echo "🔧 Installing Python dependencies with binary wheels..."
+pip install --only-binary=all -r requirements.txt
 
 echo "🤖 Checking ML model..."
 if [ -f "random_forest_model.pkl" ]; then
