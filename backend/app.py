@@ -291,15 +291,19 @@ def model_info():
     
     return jsonify(info)
 
+# Load model on startup (for serverless)
+load_model()
+
+# Vercel serverless handler
+def handler(request, response):
+    return app
+
 if __name__ == '__main__':
     print("Starting Student Dropout Prediction API...")
     print("Using existing random_forest_model.pkl file for predictions")
     print("Features used in prediction:")
     for i, feature in enumerate(feature_names):
         print(f"{i}: {feature}")
-    
-    # Load model on startup
-    load_model()
     
     print(f"\nModel loaded successfully! Using {len(feature_names)} features for prediction.")
     print("API will be available at: http://localhost:5000")

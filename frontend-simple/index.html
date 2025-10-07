@@ -530,7 +530,8 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     
     <script>
-        const API_BASE_URL = 'http://localhost:5000';
+        // API base URL - auto-detect environment
+        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '/api';
 
         function showHome() {
             document.getElementById('home-section').style.display = 'block';
@@ -596,7 +597,7 @@
 
             } catch (error) {
                 console.error('Prediction error:', error);
-                alert('Error: ' + (error.response?.data?.error || 'Failed to connect to server. Make sure the backend is running on http://localhost:5000'));
+                alert('Error: ' + (error.response?.data?.error || 'Failed to connect to server. Please check your connection.'));
             } finally {
                 // Reset button state
                 btnText.textContent = 'Predict Outcome';
