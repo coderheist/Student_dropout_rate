@@ -1,66 +1,97 @@
-from http.server import BaseHTTPRequestHandler
-import json
+"""
+Simple Python serverless function for Vercel
+Zero dependencies, basic prediction logic
+"""
 
-class handler(BaseHTTPRequestHandler):
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        self.end_headers()
-
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-Type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        
-        response = {
-            "status": "working", 
-            "message": "Student Dropout API",
-            "timestamp": "2025-10-07"
+def handler(event, context):
+    import json
+    
+    # Get HTTP method and path
+    method = event.get('httpMethod', 'GET')
+    
+    # CORS headers
+    headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Type': 'application/json'
+    }
+    
+    # Handle CORS preflight
+    if method == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': ''
         }
-        self.wfile.write(json.dumps(response).encode())
-
-    def do_POST(self):
+    
+    # Handle GET (health check)
+    if method == 'GET':
+        response = {
+            'status': 'working',
+            'message': 'Student Dropout Prediction API',
+            'version': '1.0'
+        }
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps(response)
+        }
+    
+    # Handle POST (prediction)
+    if method == 'POST':
         try:
-            length = int(self.headers.get('Content-Length', 0))
-            if length:
-                data = json.loads(self.rfile.read(length).decode())
+            # Parse request body
+            body = event.get('body', '{}')
+            if isinstance(body, str):
+                data = json.loads(body)
             else:
-                data = {}
+                data = body or {}
             
             features = data.get('features', [])
             
-            # Basic prediction
-            prediction = 1
+            # Simple prediction
+            prediction = 1  # Default: at risk
             probability = 0.5
             
             if len(features) > 6:
-                grade = features[6] if features[6] else 140
                 try:
-                    if float(grade) > 150:
+                    grade = float(features[6])
+                    if grade > 150:
                         prediction = 0
                         probability = 0.8
+                    else:
+                        prediction = 1
+                        probability = 0.7
                 except:
                     pass
             
             result = {
                 'prediction': prediction,
                 'probability': probability,
-                'message': 'Graduate' if prediction == 0 else 'Dropout Risk'
+                'message': 'Graduate' if prediction == 0 else 'At Risk'
             }
             
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps(result).encode())
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps(result)
+            }
             
         except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            error = {'error': str(e), 'prediction': 1, 'probability': 0.5}
-            self.wfile.write(json.dumps(error).encode())
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'body': json.dumps({
+                    'error': str(e),
+                    'prediction': 1,
+                    'probability': 0.5
+                })
+            }
+    
+    # Method not allowed
+    return {
+        'statusCode': 405,
+        'headers': headers,
+        'body': json.dumps({'error': 'Method not allowed'})
+    }
